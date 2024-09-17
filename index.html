@@ -66,31 +66,23 @@
   <div class="spacer layer1"></div>
 
   <!-- Default Glia integration script with Demo-Jeroen site_id -->
-  <script id="gliaScript" async src="https://api.glia.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"></script>
+  <script id="gliaScript" async src="https://api.glia.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b&cache_bust="></script>
 
   <script>
     // Site IDs for Demo-Jeroen and Demo-Ivo
     const siteIds = {
       'Demo-Jeroen': '4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b', // Example site ID for Demo-Jeroen
-      'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Replace with the actual site ID for Demo-Ivo
+      'Demo-Ivo': 'placeholder-site-id-for-ivo' // Replace with the actual site ID for Demo-Ivo
     };
 
-    // Function to reload the Glia script with the selected site ID
-    function reloadGliaScript(siteId) {
-      // Remove the existing script
-      const existingScript = document.getElementById('gliaScript');
-      if (existingScript) {
-        existingScript.remove();
+    // Function to update the Glia script src to change the site ID and prevent caching
+    function updateGliaScript(siteId) {
+      const scriptElement = document.getElementById('gliaScript');
+      if (scriptElement) {
+        // Append a cache-busting query parameter with the current timestamp
+        const cacheBust = new Date().getTime();
+        scriptElement.src = `https://api.glia.com/salemove_integration.js?site_id=${siteId}&cache_bust=${cacheBust}`;
       }
-
-      // Create a new script element
-      const newScript = document.createElement('script');
-      newScript.id = 'gliaScript';
-      newScript.async = true;
-      newScript.src = `https://api.glia.com/salemove_integration.js?site_id=${siteId}`;
-
-      // Append the new script to the body
-      document.body.appendChild(newScript);
     }
 
     // Toggle switch event listener
@@ -99,11 +91,11 @@
       if (this.checked) {
         // Switch to Demo-Ivo
         toggleLabel.textContent = 'Demo-Ivo';
-        reloadGliaScript(siteIds['Demo-Ivo']);
+        updateGliaScript(siteIds['Demo-Ivo']);
       } else {
         // Switch to Demo-Jeroen
         toggleLabel.textContent = 'Demo-Jeroen';
-        reloadGliaScript(siteIds['Demo-Jeroen']);
+        updateGliaScript(siteIds['Demo-Jeroen']);
       }
     });
   </script>
