@@ -66,7 +66,7 @@
   <div class="spacer layer1"></div>
 
   <!-- Default Glia integration script with Demo-Jeroen site_id -->
-  <script id="gliaScript" async src="https://api.glia.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"></script>
+  <script id="gliaScript" async src="https://api.glia.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b&cache_bust="></script>
 
   <script>
     // Site IDs for Demo-Jeroen and Demo-Ivo
@@ -75,7 +75,7 @@
       'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Replace with the actual site ID for Demo-Ivo
     };
 
-    // Function to reload the Glia script with the selected site ID
+    // Function to reload the Glia script with the selected site ID and prevent caching
     function reloadGliaScript(siteId) {
       // Remove the existing script
       const existingScript = document.getElementById('gliaScript');
@@ -83,11 +83,14 @@
         existingScript.remove();
       }
 
-      // Create a new script element
+      // Create a new script element with cache-busting
       const newScript = document.createElement('script');
       newScript.id = 'gliaScript';
       newScript.async = true;
-      newScript.src = `https://api.glia.com/salemove_integration.js?site_id=${siteId}`;
+      
+      // Append a cache-busting query parameter with the current timestamp
+      const cacheBust = new Date().getTime();
+      newScript.src = `https://api.glia.com/salemove_integration.js?site_id=${siteId}&cache_bust=${cacheBust}`;
 
       // Append the new script to the body
       document.body.appendChild(newScript);
@@ -109,4 +112,5 @@
   </script>
 </body>
 
-</html>
+
+
