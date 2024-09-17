@@ -47,6 +47,17 @@
       bottom: 0;
       background-image: url('./newwaves.svg');
     }
+
+    /* Style for the log area */
+    #logArea {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 20px 0;
+      height: 150px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+      font-family: monospace;
+    }
   </style>
 </head>
 
@@ -59,12 +70,15 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.3 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.4 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
   <!-- Toggle Switch -->
   <label for="toggleSwitch">Toggle Site ID:</label>
   <input type="checkbox" id="toggleSwitch" name="toggleSwitch">
   <span id="toggleLabel">Demo-Jeroen</span>
+
+  <!-- Logging area to display messages -->
+  <div id="logArea">Logs:</div>
 
   <div class="spacer layer1"></div>
 
@@ -78,25 +92,39 @@
       'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Replace with the actual site ID for Demo-Ivo
     };
 
+    // Function to log messages to the log area
+    function logMessage(message) {
+      const logArea = document.getElementById('logArea');
+      const logEntry = document.createElement('div');
+      logEntry.textContent = message;
+      logArea.appendChild(logEntry);
+    }
+
     // Function to forcefully reload the Glia script with the selected site ID and prevent caching
     function reloadGliaScript(siteId) {
+      logMessage(`Reloading script with site ID: ${siteId}`); // Log the reload action
+
       // Remove the existing script
       const existingScript = document.getElementById('gliaScript');
       if (existingScript) {
         existingScript.remove();
+        logMessage("Old script removed."); // Log removal of the old script
+      } else {
+        logMessage("No existing script found to remove."); // Log if no script is found
       }
 
       // Create a new script element with cache-busting
       const newScript = document.createElement('script');
       newScript.id = 'gliaScript';
       newScript.async = true;
-      
+
       // Append a cache-busting query parameter with the current timestamp
       const cacheBust = new Date().getTime();
       newScript.src = `https://api.beta.glia.com/salemove_integration.js?site_id=${siteId}&cache_bust=${cacheBust}`;
 
       // Append the new script to the body
       document.body.appendChild(newScript);
+      logMessage(`New script added with src: ${newScript.src}`); // Log the addition of the new script
     }
 
     // Toggle switch event listener
@@ -105,10 +133,12 @@
       if (this.checked) {
         // Switch to Demo-Ivo
         toggleLabel.textContent = 'Demo-Ivo';
+        logMessage("Switching to Demo-Ivo"); // Log the toggle action
         reloadGliaScript(siteIds['Demo-Ivo']);
       } else {
         // Switch to Demo-Jeroen
         toggleLabel.textContent = 'Demo-Jeroen';
+        logMessage("Switching to Demo-Jeroen"); // Log the toggle action
         reloadGliaScript(siteIds['Demo-Jeroen']);
       }
     });
