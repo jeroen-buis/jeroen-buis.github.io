@@ -70,7 +70,7 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.8 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.9 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
   <!-- Toggle Switch -->
   <label for="toggleSwitch">Toggle Site ID:</label>
@@ -103,11 +103,18 @@
     // Function to determine which site ID to use based on the current time
     function determineSiteId() {
       const date = new Date();
-      const minutes = date.getMinutes();
+      const hours = date.getHours().toString().padStart(2, '0'); // Get current hour
+      const minutes = date.getMinutes().toString().padStart(2, '0'); // Get current minutes
+      const seconds = date.getSeconds().toString().padStart(2, '0'); // Get current seconds
       
+      // Log the current time
+      logMessage(`Current Time: ${hours}:${minutes}:${seconds}`);
+
       if (minutes % 10 < 5) {
+        logMessage("Trying to connect with Demo-Jeroen"); // Log which site it is trying to connect
         return 'Demo-Jeroen';
       } else {
+        logMessage("Trying to connect with Demo-Ivo"); // Log which site it is trying to connect
         return 'Demo-Ivo';
       }
     }
