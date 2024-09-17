@@ -70,7 +70,7 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.4 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.5 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
   <!-- Toggle Switch -->
   <label for="toggleSwitch">Toggle Site ID:</label>
@@ -100,9 +100,26 @@
       logArea.appendChild(logEntry);
     }
 
+    // Function to unload Glia session if available
+    function unloadGliaSession() {
+      try {
+        if (window.Salemove && window.Salemove.endEngagement) {
+          window.Salemove.endEngagement();
+          logMessage("Ended Glia engagement.");
+        } else {
+          logMessage("No active Glia session found to end.");
+        }
+      } catch (error) {
+        logMessage("Error ending Glia session: " + error.message);
+      }
+    }
+
     // Function to forcefully reload the Glia script with the selected site ID and prevent caching
     function reloadGliaScript(siteId) {
       logMessage(`Reloading script with site ID: ${siteId}`); // Log the reload action
+
+      // End current session before reloading script
+      unloadGliaSession();
 
       // Remove the existing script
       const existingScript = document.getElementById('gliaScript');
