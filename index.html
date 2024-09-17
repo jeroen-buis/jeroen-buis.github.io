@@ -70,7 +70,7 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.7 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.8 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
   <!-- Toggle Switch -->
   <label for="toggleSwitch">Toggle Site ID:</label>
@@ -82,14 +82,14 @@
 
   <div class="spacer layer1"></div>
 
-  <!-- Default Glia integration script with Demo-Jeroen site_id -->
-  <script id="gliaScript" async src="https://api.beta.glia.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b&cache_bust="></script>
+  <!-- Default Glia integration script -->
+  <script id="gliaScript" async src=""></script>
 
   <script>
     // Site IDs for Demo-Jeroen and Demo-Ivo
     const siteIds = {
-      'Demo-Jeroen': '4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b', // Example site ID for Demo-Jeroen
-      'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Replace with the actual site ID for Demo-Ivo
+      'Demo-Jeroen': '4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b', // Site ID for Demo-Jeroen
+      'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Site ID for Demo-Ivo
     };
 
     // Function to log messages to the log area
@@ -100,84 +100,65 @@
       logArea.appendChild(logEntry);
     }
 
-    // Function to clear the Glia visitor session
-    function clearVisitorSession(callback) {
-      if (window.Glia && window.Glia.sharedInstance && window.Glia.sharedInstance.clearVisitorSession) {
-        window.Glia.sharedInstance.clearVisitorSession(function(result) {
-          if (result.success) {
-            logMessage("Visitor session has been successfully cleared.");
-            if (typeof callback === "function") callback(); // Execute the callback if provided
-          } else if (result.failure) {
-            logMessage("Failed to clear visitor session: " + result.failure.message);
-          }
-        });
+    // Function to determine which site ID to use based on the current time
+    function determineSiteId() {
+      const date = new Date();
+      const minutes = date.getMinutes();
+      
+      if (minutes % 10 < 5) {
+        return 'Demo-Jeroen';
       } else {
-        logMessage("Glia clearVisitorSession method is not available.");
-        if (typeof callback === "function") callback(); // Still proceed if Glia method is not available
+        return 'Demo-Ivo';
       }
     }
 
-    // Function to forcefully reload the Glia script with the selected site ID and prevent caching
+    // Function to reload the Glia script with the selected site ID and prevent caching
     function reloadGliaScript(siteId) {
       logMessage(`Reloading script with site ID: ${siteId}`); // Log the reload action
 
-      // Clear visitor session before reloading script
-      clearVisitorSession(function () {
-        // Remove the existing script
-        const existingScript = document.getElementById('gliaScript');
-        if (existingScript) {
-          existingScript.remove();
-          logMessage("Old script removed."); // Log removal of the old script
-        } else {
-          logMessage("No existing script found to remove."); // Log if no script is found
-        }
+      // Remove the existing script
+      const existingScript = document.getElementById('gliaScript');
+      if (existingScript) {
+        existingScript.remove();
+        logMessage("Old script removed."); // Log removal of the old script
+      } else {
+        logMessage("No existing script found to remove."); // Log if no script is found
+      }
 
-        // Create a new script element with cache-busting
-        const newScript = document.createElement('script');
-        newScript.id = 'gliaScript';
-        newScript.async = true;
+      // Create a new script element with cache-busting
+      const newScript = document.createElement('script');
+      newScript.id = 'gliaScript';
+      newScript.async = true;
 
-        // Append a cache-busting query parameter with the current timestamp
-        const cacheBust = new Date().getTime();
-        newScript.src = `https://api.beta.glia.com/salemove_integration.js?site_id=${siteId}&cache_bust=${cacheBust}`;
+      // Append a cache-busting query parameter with the current timestamp
+      const cacheBust = new Date().getTime();
+      newScript.src = `https://api.beta.glia.com/salemove_integration.js?site_id=${siteIds[siteId]}&cache_bust=${cacheBust}`;
 
-        // Add event listeners to log success or error
-        newScript.onload = function () {
-          logMessage(`Glia script loaded successfully for site ID: ${siteId}`);
-        };
-        newScript.onerror = function () {
-          logMessage(`Error loading Glia script for site ID: ${siteId}`);
-        };
+      // Add event listeners to log success or error
+      newScript.onload = function () {
+        logMessage(`Glia script loaded successfully for site ID: ${siteId}`);
+      };
+      newScript.onerror = function () {
+        logMessage(`Error loading Glia script for site ID: ${siteId}`);
+      };
 
-        // Append the new script to the body
-        document.body.appendChild(newScript);
-        logMessage(`New script added with src: ${newScript.src}`); // Log the addition of the new script
-      });
+      // Append the new script to the body
+      document.body.appendChild(newScript);
+      logMessage(`New script added with src: ${newScript.src}`); // Log the addition of the new script
     }
 
-    // Initial connection logging
-    document.getElementById('gliaScript').addEventListener('load', function () {
-      logMessage("Initial Glia script loaded successfully.");
-    });
+    // Load the appropriate script based on the current time
+    const initialSiteId = determineSiteId();
+    reloadGliaScript(initialSiteId);
+    document.getElementById('toggleLabel').textContent = initialSiteId;
 
-    document.getElementById('gliaScript').addEventListener('error', function () {
-      logMessage("Error loading initial Glia script.");
-    });
-
-    // Toggle switch event listener
+    // Toggle switch event listener to reload the script when toggled
     document.getElementById('toggleSwitch').addEventListener('change', function () {
       const toggleLabel = document.getElementById('toggleLabel');
-      if (this.checked) {
-        // Switch to Demo-Ivo
-        toggleLabel.textContent = 'Demo-Ivo';
-        logMessage("Switching to Demo-Ivo"); // Log the toggle action
-        reloadGliaScript(siteIds['Demo-Ivo']);
-      } else {
-        // Switch to Demo-Jeroen
-        toggleLabel.textContent = 'Demo-Jeroen';
-        logMessage("Switching to Demo-Jeroen"); // Log the toggle action
-        reloadGliaScript(siteIds['Demo-Jeroen']);
-      }
+      const currentSiteId = determineSiteId();
+      toggleLabel.textContent = currentSiteId;
+      logMessage(`Switching to ${currentSiteId}`); // Log the toggle action
+      reloadGliaScript(currentSiteId);
     });
   </script>
 </body>
