@@ -64,10 +64,10 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.10 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.11 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
-  <!-- Toggle Switch -->
-  <label for="toggleSwitch">Toggle Site ID:</label>
+  <!-- Switch Site Toggle -->
+  <label for="toggleSwitch">Switch Site:</label>
   <input type="checkbox" id="toggleSwitch" name="toggleSwitch">
   <span id="toggleLabel">Demo-Jeroen</span>
 
@@ -140,7 +140,7 @@
       // Add event listeners to log success or error
       newScript.onload = function () {
         logMessage(`Connection Successful: Glia script loaded for site ID: ${siteId}`);
-        // Here, you can log additional information returned from the connection if available
+        // Log any response from the widget here if applicable
       };
       newScript.onerror = function () {
         logMessage(`Connection Failed: Error loading Glia script for site ID: ${siteId}`);
@@ -159,7 +159,7 @@
     // Toggle switch event listener to reload the script when toggled
     document.getElementById('toggleSwitch').addEventListener('change', function () {
       const toggleLabel = document.getElementById('toggleLabel');
-      const currentSiteId = determineSiteId();
+      const currentSiteId = this.checked ? 'Demo-Ivo' : 'Demo-Jeroen'; // Decide based on toggle state
       toggleLabel.textContent = currentSiteId;
       logMessage(`Switching to ${currentSiteId}`); // Log the toggle action
       reloadGliaScript(currentSiteId);
