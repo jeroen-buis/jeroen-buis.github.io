@@ -60,30 +60,11 @@
 
   <div class="spacer layer1"></div>
 
-  <script>
-    var installGlia = function(siteId, callback) {
-      var gliaIntegrationScriptUrl = 'https://api.glia.com/salemove_integration.js?site_id=' + siteId;
-      var scriptElement = document.createElement('script');
-
-      scriptElement.async = 1;
-      scriptElement.src = gliaIntegrationScriptUrl;
-      scriptElement.type = 'text/javascript';
-      if (typeof(callback) === 'function') {
-        scriptElement.addEventListener('load', callback);
-      }
-
-      document.body.append(scriptElement);
-    };
-
-    // Define your site ID here
-    var siteId = '4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b';
-
-    // Install Glia script with the specified site ID
-    installGlia(siteId, function() {
-      console.log('Glia script loaded successfully.');
-      // Any post-install configuration can go here
-    });
-  </script>
+  <!-- Updated Glia integration script with site_id -->
+  <script async src="https://api.glia.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"></script>
+  
 </body>
 
 </html>
+
+
