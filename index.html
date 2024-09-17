@@ -75,14 +75,25 @@
       'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Replace with the actual site ID for Demo-Ivo
     };
 
-    // Function to update the Glia script src to change the site ID and prevent caching
-    function updateGliaScript(siteId) {
-      const scriptElement = document.getElementById('gliaScript');
-      if (scriptElement) {
-        // Append a cache-busting query parameter with the current timestamp
-        const cacheBust = new Date().getTime();
-        scriptElement.src = `https://api.beta.glia.com/salemove_integration.js?site_id=${siteId}&cache_bust=${cacheBust}`;
+    // Function to reload the Glia script with the selected site ID and prevent caching
+    function reloadGliaScript(siteId) {
+      // Remove the existing script
+      const existingScript = document.getElementById('gliaScript');
+      if (existingScript) {
+        existingScript.remove();
       }
+
+      // Create a new script element with cache-busting
+      const newScript = document.createElement('script');
+      newScript.id = 'gliaScript';
+      newScript.async = true;
+      
+      // Append a cache-busting query parameter with the current timestamp
+      const cacheBust = new Date().getTime();
+      newScript.src = `https://api.beta.glia.com/salemove_integration.js?site_id=${siteId}&cache_bust=${cacheBust}`;
+
+      // Append the new script to the body
+      document.body.appendChild(newScript);
     }
 
     // Toggle switch event listener
@@ -91,11 +102,11 @@
       if (this.checked) {
         // Switch to Demo-Ivo
         toggleLabel.textContent = 'Demo-Ivo';
-        updateGliaScript(siteIds['Demo-Ivo']);
+        reloadGliaScript(siteIds['Demo-Ivo']);
       } else {
         // Switch to Demo-Jeroen
         toggleLabel.textContent = 'Demo-Jeroen';
-        updateGliaScript(siteIds['Demo-Jeroen']);
+        reloadGliaScript(siteIds['Demo-Jeroen']);
       }
     });
   </script>
