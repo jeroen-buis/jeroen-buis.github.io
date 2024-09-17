@@ -12,7 +12,6 @@
       box-sizing: border-box;
     }
 
-
     html body {
       margin: 0;
       background-color: #ffffff;
@@ -59,9 +58,55 @@
   <h1>Welcome to Jeroen's test site!</h1>
   <a href="/">Navigate</a>
 
+  <!-- Toggle Switch -->
+  <label for="toggleSwitch">Toggle Site ID:</label>
+  <input type="checkbox" id="toggleSwitch" name="toggleSwitch">
+  <span id="toggleLabel">Demo-Jeroen</span>
+
   <div class="spacer layer1"></div>
 
-  <script async src="//api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"></script>
+  <!-- Default Glia integration script with Demo-Jeroen site_id -->
+  <script id="gliaScript" async src="https://api.glia.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"></script>
+
+  <script>
+    // Site IDs for Demo-Jeroen and Demo-Ivo
+    const siteIds = {
+      'Demo-Jeroen': '4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b', // Example site ID for Demo-Jeroen
+      'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Replace with the actual site ID for Demo-Ivo
+    };
+
+    // Function to reload the Glia script with the selected site ID
+    function reloadGliaScript(siteId) {
+      // Remove the existing script
+      const existingScript = document.getElementById('gliaScript');
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      // Create a new script element
+      const newScript = document.createElement('script');
+      newScript.id = 'gliaScript';
+      newScript.async = true;
+      newScript.src = `https://api.glia.com/salemove_integration.js?site_id=${siteId}`;
+
+      // Append the new script to the body
+      document.body.appendChild(newScript);
+    }
+
+    // Toggle switch event listener
+    document.getElementById('toggleSwitch').addEventListener('change', function () {
+      const toggleLabel = document.getElementById('toggleLabel');
+      if (this.checked) {
+        // Switch to Demo-Ivo
+        toggleLabel.textContent = 'Demo-Ivo';
+        reloadGliaScript(siteIds['Demo-Ivo']);
+      } else {
+        // Switch to Demo-Jeroen
+        toggleLabel.textContent = 'Demo-Jeroen';
+        reloadGliaScript(siteIds['Demo-Jeroen']);
+      }
+    });
+  </script>
 </body>
 
 </html>
