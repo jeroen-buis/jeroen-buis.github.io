@@ -70,7 +70,7 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.5 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.6 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
   <!-- Toggle Switch -->
   <label for="toggleSwitch">Toggle Site ID:</label>
@@ -139,10 +139,27 @@
       const cacheBust = new Date().getTime();
       newScript.src = `https://api.beta.glia.com/salemove_integration.js?site_id=${siteId}&cache_bust=${cacheBust}`;
 
+      // Add event listeners to log success or error
+      newScript.onload = function () {
+        logMessage(`Glia script loaded successfully for site ID: ${siteId}`);
+      };
+      newScript.onerror = function () {
+        logMessage(`Error loading Glia script for site ID: ${siteId}`);
+      };
+
       // Append the new script to the body
       document.body.appendChild(newScript);
       logMessage(`New script added with src: ${newScript.src}`); // Log the addition of the new script
     }
+
+    // Initial connection logging
+    document.getElementById('gliaScript').addEventListener('load', function () {
+      logMessage("Initial Glia script loaded successfully.");
+    });
+
+    document.getElementById('gliaScript').addEventListener('error', function () {
+      logMessage("Error loading initial Glia script.");
+    });
 
     // Toggle switch event listener
     document.getElementById('toggleSwitch').addEventListener('change', function () {
