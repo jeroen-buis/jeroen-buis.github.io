@@ -64,12 +64,14 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.11 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.12 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
-  <!-- Switch Site Toggle -->
-  <label for="toggleSwitch">Switch Site:</label>
-  <input type="checkbox" id="toggleSwitch" name="toggleSwitch">
-  <span id="toggleLabel">Demo-Jeroen</span>
+  <!-- Dropdown to Switch Sites -->
+  <label for="siteDropdown">Switch Site:</label>
+  <select id="siteDropdown" name="siteDropdown">
+    <option value="Demo-Jeroen">Demo-Jeroen</option>
+    <option value="Demo-Ivo">Demo-Ivo</option>
+  </select>
 
   <!-- Logging area to display messages -->
   <div id="logArea">Logs:</div>
@@ -154,15 +156,13 @@
     // Load the appropriate script based on the current time
     const initialSiteId = determineSiteId();
     reloadGliaScript(initialSiteId);
-    document.getElementById('toggleLabel').textContent = initialSiteId;
+    document.getElementById('siteDropdown').value = initialSiteId; // Set dropdown to the initial site
 
-    // Toggle switch event listener to reload the script when toggled
-    document.getElementById('toggleSwitch').addEventListener('change', function () {
-      const toggleLabel = document.getElementById('toggleLabel');
-      const currentSiteId = this.checked ? 'Demo-Ivo' : 'Demo-Jeroen'; // Decide based on toggle state
-      toggleLabel.textContent = currentSiteId;
-      logMessage(`Switching to ${currentSiteId}`); // Log the toggle action
-      reloadGliaScript(currentSiteId);
+    // Dropdown event listener to reload the script when selection changes
+    document.getElementById('siteDropdown').addEventListener('change', function () {
+      const selectedSiteId = this.value;
+      logMessage(`Switching to ${selectedSiteId}`); // Log the dropdown change action
+      reloadGliaScript(selectedSiteId);
     });
   </script>
 </body>
