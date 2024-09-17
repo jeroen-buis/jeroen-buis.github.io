@@ -15,7 +15,7 @@
     html body {
       margin: 0;
       background-color: #ffffff;
-      height: 100%
+      height: 100%;
     }
 
     /* Responsive layout - makes a two column-layout instead of four columns */
@@ -42,12 +42,6 @@
       background-size: cover;
     }
 
-    .layer1 {
-      position: absolute;
-      bottom: 0;
-      background-image: url('./newwaves.svg');
-    }
-
     /* Style for the log area */
     #logArea {
       border: 1px solid #ddd;
@@ -70,7 +64,7 @@
   <a href="/">Navigate</a>
 
   <!-- Version Display -->
-  <p>Version 1.0.9 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <p>Version 1.0.10 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
 
   <!-- Toggle Switch -->
   <label for="toggleSwitch">Toggle Site ID:</label>
@@ -80,7 +74,7 @@
   <!-- Logging area to display messages -->
   <div id="logArea">Logs:</div>
 
-  <div class="spacer layer1"></div>
+  <div class="spacer"></div> <!-- Removed the background image -->
 
   <!-- Default Glia integration script -->
   <script id="gliaScript" async src=""></script>
@@ -92,12 +86,14 @@
       'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Site ID for Demo-Ivo
     };
 
-    // Function to log messages to the log area
+    // Function to log messages to the log area with timestamp
     function logMessage(message) {
       const logArea = document.getElementById('logArea');
       const logEntry = document.createElement('div');
-      logEntry.textContent = message;
+      const currentTime = new Date().toLocaleTimeString();
+      logEntry.textContent = `[${currentTime}] ${message}`;
       logArea.appendChild(logEntry);
+      logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to the bottom
     }
 
     // Function to determine which site ID to use based on the current time
@@ -111,10 +107,10 @@
       logMessage(`Current Time: ${hours}:${minutes}:${seconds}`);
 
       if (minutes % 10 < 5) {
-        logMessage("Trying to connect with Demo-Jeroen"); // Log which site it is trying to connect
+        logMessage("Decision: Connect to Demo-Jeroen"); // Log which site it is trying to connect
         return 'Demo-Jeroen';
       } else {
-        logMessage("Trying to connect with Demo-Ivo"); // Log which site it is trying to connect
+        logMessage("Decision: Connect to Demo-Ivo"); // Log which site it is trying to connect
         return 'Demo-Ivo';
       }
     }
@@ -143,10 +139,11 @@
 
       // Add event listeners to log success or error
       newScript.onload = function () {
-        logMessage(`Glia script loaded successfully for site ID: ${siteId}`);
+        logMessage(`Connection Successful: Glia script loaded for site ID: ${siteId}`);
+        // Here, you can log additional information returned from the connection if available
       };
       newScript.onerror = function () {
-        logMessage(`Error loading Glia script for site ID: ${siteId}`);
+        logMessage(`Connection Failed: Error loading Glia script for site ID: ${siteId}`);
       };
 
       // Append the new script to the body
