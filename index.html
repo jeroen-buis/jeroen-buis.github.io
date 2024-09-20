@@ -12,10 +12,11 @@
       box-sizing: border-box;
     }
 
+
     html body {
       margin: 0;
       background-color: #ffffff;
-      height: 100%;
+      height: 100%
     }
 
     /* Responsive layout - makes a two column-layout instead of four columns */
@@ -42,15 +43,10 @@
       background-size: cover;
     }
 
-    /* Style for the log area */
-    #logArea {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin: 20px 0;
-      height: 150px;
-      overflow-y: auto;
-      background-color: #f9f9f9;
-      font-family: monospace;
+    .layer1 {
+      position: absolute;
+      bottom: 0;
+      background-image: url('./newwaves.svg');
     }
   </style>
 </head>
@@ -63,108 +59,9 @@
   <h1>Welcome to Jeroen's test site!</h1>
   <a href="/">Navigate</a>
 
-  <!-- Version Display -->
-  <p>Version 1.0.12 - Updated on 2024-09-17</p> <!-- Add version information or random text here -->
+  <div class="spacer layer1"></div>
 
-  <!-- Dropdown to Switch Sites -->
-  <label for="siteDropdown">Switch Site:</label>
-  <select id="siteDropdown" name="siteDropdown">
-    <option value="Demo-Jeroen">Demo-Jeroen</option>
-    <option value="Demo-Ivo">Demo-Ivo</option>
-  </select>
-
-  <!-- Logging area to display messages -->
-  <div id="logArea">Logs:</div>
-
-  <div class="spacer"></div> <!-- Removed the background image -->
-
-  <!-- Default Glia integration script -->
-  <script id="gliaScript" async src=""></script>
-
-  <script>
-    // Site IDs for Demo-Jeroen and Demo-Ivo
-    const siteIds = {
-      'Demo-Jeroen': '4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b', // Site ID for Demo-Jeroen
-      'Demo-Ivo': '2b5d16ac-a754-46bb-8621-da3ff6e15ecc' // Site ID for Demo-Ivo
-    };
-
-    // Function to log messages to the log area with timestamp
-    function logMessage(message) {
-      const logArea = document.getElementById('logArea');
-      const logEntry = document.createElement('div');
-      const currentTime = new Date().toLocaleTimeString();
-      logEntry.textContent = `[${currentTime}] ${message}`;
-      logArea.appendChild(logEntry);
-      logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to the bottom
-    }
-
-    // Function to determine which site ID to use based on the current time
-    function determineSiteId() {
-      const date = new Date();
-      const hours = date.getHours().toString().padStart(2, '0'); // Get current hour
-      const minutes = date.getMinutes().toString().padStart(2, '0'); // Get current minutes
-      const seconds = date.getSeconds().toString().padStart(2, '0'); // Get current seconds
-      
-      // Log the current time
-      logMessage(`Current Time: ${hours}:${minutes}:${seconds}`);
-
-      if (minutes % 10 < 5) {
-        logMessage("Decision: Connect to Demo-Jeroen"); // Log which site it is trying to connect
-        return 'Demo-Jeroen';
-      } else {
-        logMessage("Decision: Connect to Demo-Ivo"); // Log which site it is trying to connect
-        return 'Demo-Ivo';
-      }
-    }
-
-    // Function to reload the Glia script with the selected site ID and prevent caching
-    function reloadGliaScript(siteId) {
-      logMessage(`Reloading script with site ID: ${siteId}`); // Log the reload action
-
-      // Remove the existing script
-      const existingScript = document.getElementById('gliaScript');
-      if (existingScript) {
-        existingScript.remove();
-        logMessage("Old script removed."); // Log removal of the old script
-      } else {
-        logMessage("No existing script found to remove."); // Log if no script is found
-      }
-
-      // Create a new script element with cache-busting
-      const newScript = document.createElement('script');
-      newScript.id = 'gliaScript';
-      newScript.async = true;
-
-      // Append a cache-busting query parameter with the current timestamp
-      const cacheBust = new Date().getTime();
-      newScript.src = `https://api.beta.glia.com/salemove_integration.js?site_id=${siteIds[siteId]}&cache_bust=${cacheBust}`;
-
-      // Add event listeners to log success or error
-      newScript.onload = function () {
-        logMessage(`Connection Successful: Glia script loaded for site ID: ${siteId}`);
-        // Log any response from the widget here if applicable
-      };
-      newScript.onerror = function () {
-        logMessage(`Connection Failed: Error loading Glia script for site ID: ${siteId}`);
-      };
-
-      // Append the new script to the body
-      document.body.appendChild(newScript);
-      logMessage(`New script added with src: ${newScript.src}`); // Log the addition of the new script
-    }
-
-    // Load the appropriate script based on the current time
-    const initialSiteId = determineSiteId();
-    reloadGliaScript(initialSiteId);
-    document.getElementById('siteDropdown').value = initialSiteId; // Set dropdown to the initial site
-
-    // Dropdown event listener to reload the script when selection changes
-    document.getElementById('siteDropdown').addEventListener('change', function () {
-      const selectedSiteId = this.value;
-      logMessage(`Switching to ${selectedSiteId}`); // Log the dropdown change action
-      reloadGliaScript(selectedSiteId);
-    });
-  </script>
+  <script async src="//api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"></script>
 </body>
 
 </html>
