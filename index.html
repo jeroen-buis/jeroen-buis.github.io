@@ -12,7 +12,6 @@
       box-sizing: border-box;
     }
 
-
     html body {
       margin: 0;
       background-color: #ffffff;
@@ -48,6 +47,18 @@
       bottom: 0;
       background-image: url('./newwaves.svg');
     }
+
+    /* Log section styling */
+    #log {
+      margin: 20px;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border: 1px solid #ccc;
+      height: 200px;
+      overflow-y: scroll;
+      font-family: monospace;
+    }
+
   </style>
 </head>
 
@@ -61,7 +72,36 @@
 
   <div class="spacer layer1"></div>
 
-  <script async src="//api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"></script>
+  <!-- Log section to display log messages -->
+  <div id="log"></div>
+
+  <script async src="//api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b" 
+    onload="log('salemove_integration.js loaded');"></script>
+
+  <script>
+    // Log messages to the log section
+    function log(message) {
+      var logDiv = document.getElementById('log');
+      var newMessage = document.createElement('p');
+      newMessage.textContent = new Date().toISOString() + ': ' + message;
+      logDiv.appendChild(newMessage);
+    }
+
+    // Check for events after script has loaded
+    window.addEventListener('DOMContentLoaded', function() {
+      log('Page fully loaded and DOM is ready.');
+      
+      // Example event listener (replace with actual event handlers based on salemove_integration)
+      if (typeof Salemove !== 'undefined') {
+        Salemove.addEventListener('someEvent', function(eventData) {
+          log('Some event triggered: ' + JSON.stringify(eventData));
+        });
+      } else {
+        log('Salemove object not found.');
+      }
+    });
+
+  </script>
 </body>
 
 </html>
