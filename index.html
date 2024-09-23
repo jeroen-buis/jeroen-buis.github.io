@@ -48,13 +48,13 @@
   <a href="/">Navigate</a>
 
   <!-- Version number to track changes -->
-  <div id="version">Version 1.0.4</div>
+  <div id="version">Version 1.0.5</div>
 
   <!-- Log section to display log messages -->
   <div id="log"></div>
 
   <script async src="https://api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b" 
-    onload="log('salemove_integration.js loaded'); subscribeToQueueStateUpdates();"></script>
+    onload="log('salemove_integration.js loaded'); checkSalemoveAvailability();"></script>
 
   <script>
     // Log messages to the log section
@@ -65,37 +65,47 @@
       logDiv.appendChild(newMessage);
     }
 
+    // Function to retry checking Salemove availability
+    function checkSalemoveAvailability(retries = 5, delay = 1000) {
+      if (typeof Salemove !== 'undefined' && typeof Salemove.getQueues === 'function') {
+        log('Salemove object available.');
+        subscribeToQueueStateUpdates();
+      } else if (retries > 0) {
+        log('Salemove object not available. Retrying in ' + delay / 1000 + ' seconds...');
+        setTimeout(function() {
+          checkSalemoveAvailability(retries - 1, delay);
+        }, delay);
+      } else {
+        log('Salemove object or getQueues function not available after retries.');
+      }
+    }
+
     // Function to retrieve queues and subscribe to queue state updates
     function subscribeToQueueStateUpdates() {
-      if (typeof Salemove !== 'undefined' && typeof Salemove.getQueues === 'function') {
-        // Get the list of queues
-        Salemove.getQueues()
-          .then(function(queues) {
-            log('Queues retrieved: ' + JSON.stringify(queues, null, 2));
-            
-            // Map the queue IDs
-            var queueIds = queues.map(function(queue) {
-              return queue.id;
-            });
-
-            // Subscribe to state updates for each queue
-            Salemove.subscribeToQueueStateUpdates(queueIds, function(updatedQueue) {
-              log('Queue state updated: ' + JSON.stringify(updatedQueue, null, 2));
-
-              if (updatedQueue.state === updatedQueue.state.STATUSES.OPEN) {
-                log('Queue ' + updatedQueue.id + ' is open.');
-              } else {
-                log('Queue ' + updatedQueue.id + ' is closed.');
-              }
-            });
-
-          })
-          .catch(function(error) {
-            log('Error retrieving queues: ' + error.message);
+      Salemove.getQueues()
+        .then(function(queues) {
+          log('Queues retrieved: ' + JSON.stringify(queues, null, 2));
+          
+          // Map the queue IDs
+          var queueIds = queues.map(function(queue) {
+            return queue.id;
           });
-      } else {
-        log('Salemove object or getQueues function not available.');
-      }
+
+          // Subscribe to state updates for each queue
+          Salemove.subscribeToQueueStateUpdates(queueIds, function(updatedQueue) {
+            log('Queue state updated: ' + JSON.stringify(updatedQueue, null, 2));
+
+            if (updatedQueue.state === updatedQueue.state.STATUSES.OPEN) {
+              log('Queue ' + updatedQueue.id + ' is open.');
+            } else {
+              log('Queue ' + updatedQueue.id + ' is closed.');
+            }
+          });
+
+        })
+        .catch(function(error) {
+          log('Error retrieving queues: ' + error.message);
+        });
     }
 
     // Check for events after script has loaded
