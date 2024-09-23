@@ -48,12 +48,12 @@
   <a href="/">Navigate</a>
 
   <!-- Version number to track changes -->
-  <div id="version">Version 1.0.2</div>
+  <div id="version">Version 1.0.3</div>
 
   <!-- Log section to display log messages -->
   <div id="log"></div>
 
-  <script async src="//api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b" 
+  <script async src="https://api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b" 
     onload="log('salemove_integration.js loaded'); retrieveQueues();"></script>
 
   <script>
@@ -74,9 +74,19 @@
           })
           .catch(function(error) {
             log('Error retrieving queues: ' + error.message);
+            checkDefaultResponse(error.message); // Check for default response
           });
       } else {
         log('Salemove object or getQueues function not available.');
+      }
+    }
+
+    // Function to check for default Glia response
+    function checkDefaultResponse(errorMessage) {
+      // Custom check for the default response text
+      const defaultResponse = "The Glia script has been installed correctly on this page. Please contact your success manager for next steps.";
+      if (errorMessage.includes(defaultResponse)) {
+        log('Glia default response detected: ' + defaultResponse);
       }
     }
 
