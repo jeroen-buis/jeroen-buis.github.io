@@ -15,7 +15,7 @@
     html body {
       margin: 0;
       background-color: #ffffff;
-      height: 100%
+      height: 100%;
     }
 
     /* Version styling */
@@ -31,7 +31,7 @@
       padding: 10px;
       background-color: #f1f1f1;
       border: 1px solid #ccc;
-      height: 200px;
+      height: 400px; /* Increased height */
       overflow-y: scroll;
       font-family: monospace;
     }
@@ -48,7 +48,7 @@
   <a href="/">Navigate</a>
 
   <!-- Version number to track changes -->
-  <div id="version">Version 1.0.7</div>
+  <div id="version">Version 1.0.8</div>
 
   <!-- Log section to display log messages -->
   <div id="log"></div>
@@ -65,12 +65,28 @@
       logDiv.appendChild(newMessage);
     }
 
-    // Initialize Salemove API
+    // Initialize Salemove API and set visitor ID attributes
     function initializeSalemove() {
       if (typeof sm !== 'undefined' && typeof sm.getApi === 'function') {
-        sm.getApi({ version: 'v1' }).then(function() {
+        sm.getApi({ version: 'v1' }).then(function(glia) {
           log('Salemove API initialized.');
-          // Widget is now loaded and ready to interact.
+
+          // Update visitor information with custom attributes
+          glia.updateInformation({
+            customAttributesUpdateMethod: 'merge',
+            customAttributes: {
+              vip: 'true'
+            }
+          }).then(function() {
+            log('Visitor information updated with custom attributes.');
+          }).catch(function(error) {
+            if (error.cause === glia.ERRORS.NETWORK_TIMEOUT) {
+              log('Error: Network timeout while updating visitor information.');
+            } else {
+              log('Error updating visitor information: ' + error.message);
+            }
+          });
+
         }).catch(function(error) {
           log('Error initializing Salemove API: ' + error.message);
         });
