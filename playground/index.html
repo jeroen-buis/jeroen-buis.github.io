@@ -42,19 +42,53 @@
       color: #666;
     }
 
-    /* Log section styling */
+    /* Queue and Engagement section */
+    .interaction-box {
+      margin: 20px auto;
+      padding: 15px;
+      max-width: 400px;
+      background-color: #f1f1f1;
+      border-radius: 10px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Log section */
     #log {
       margin: 20px auto;
       padding: 8px;
       background-color: #f9f9f9;
       border: 1px solid #ccc;
-      height: 150px; /* Reduced height */
-      max-width: 80%; /* Keep it from stretching too wide */
+      height: 150px;
+      max-width: 80%;
       overflow-y: auto;
       font-family: monospace;
       font-size: 12px;
       border-radius: 5px;
       text-align: left;
+    }
+
+    /* Queue Button */
+    .queue-btn {
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .queue-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .cancel-btn {
+      color: red;
+      cursor: pointer;
+      text-decoration: underline;
+      display: block;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -68,16 +102,25 @@
 
   <div id="version">Version 1.0.8</div>
 
+  <!-- Queue Engagement Section -->
+  <div id="queue-view" class="interaction-box">Checking queue status...</div>
+
+  <!-- Engagement Status Section -->
+  <div id="engagement-view" class="interaction-box">No active engagement.</div>
+
   <!-- Log section -->
   <div id="log"></div>
 
   <script async src="https://api.salemove.com/salemove_integration.js" 
-    onload="log('salemove_integration.js loaded'); initializeSalemove();"></script>
+    onload="log('salemove_integration.js loaded'); initializeGlia();"></script>
 
   <script>
+    let queueView = document.getElementById('queue-view');
+    let engagementView = document.getElementById('engagement-view');
+
     function log(message) {
-      var logDiv = document.getElementById('log');
-      var newMessage = document.createElement('p');
+      let logDiv = document.getElementById('log');
+      let newMessage = document.createElement('p');
       newMessage.textContent = new Date().toISOString() + ': ' + message;
       logDiv.appendChild(newMessage);
       
@@ -85,25 +128,73 @@
       logDiv.scrollTop = logDiv.scrollHeight;
     }
 
-    function initializeSalemove() {
+    function initializeGlia() {
       if (typeof sm !== 'undefined' && typeof sm.getApi === 'function') {
-        sm.getApi({ version: 'v1' }).then(function(glia) {
-          log('Salemove API initialized.');
+        sm.getApi({ version: 'v1' }).then(function(salemove) {
+          log('Glia API initialized.');
 
-          glia.updateInformation({
-            customAttributesUpdateMethod: 'merge',
-            customAttributes: { vip: 'true' }
-          }).then(function() {
-            log('Visitor information updated with custom attributes.');
-          }).catch(function(error) {
-            log('Error updating visitor information: ' + error.message);
-          });
+          function onQueueStateUpdate(queueState) {
+            if (queueState.state === queueState.QUEUE_STATES.CAN_QUEUE) {
+              queueView.innerHTML = '<button class="queue-btn" id="queue-btn">Click to queue</button>';
+              document.getElementById('queue-btn').addEventListener('click', onClickToQueue);
+              log('Ready to queue.');
+            } else if (queueState.state === queueState.QUEUE_STATES.QUEUED) {
+              showWaitingView(queueState.ticket);
+              salemove.getQueueWaitDuration()
+                .then(showWaitingViewWithTimer(queueState.ticket));
+            } else if (queueState.state === queueState.QUEUE_STATES.CANNOT_QUEUE) {
+              queueView.innerText = 'Cannot queue at this time.';
+              log('Cannot queue.');
+            }
+          }
 
+          function onClickToQueue() {
+            salemove.queueForEngagement('text').catch(showFailedToQueueView);
+            log('Attempting to queue...');
+          }
+
+          function showWaitingView(queueTicket) {
+            queueView.innerHTML = 'Hang on. <span class="cancel-btn">Cancel</span>';
+            document.querySelector('.cancel-btn').addEventListener('click', function() {
+              queueTicket.cancel();
+              log('Queue canceled by user.');
+            });
+          }
+
+          function showWaitingViewWithTimer(queueTicket) {
+            return function(waitDuration) {
+              queueView.innerHTML = 'Hang on. Estimated wait: ' + 
+                waitDuration.averageDurationInSeconds + ' seconds. <span class="cancel-btn">Cancel</span>';
+              document.querySelector('.cancel-btn').addEventListener('click', function() {
+                queueTicket.cancel();
+                log('Queue canceled by user.');
+              });
+            };
+          }
+
+          function showFailedToQueueView(error) {
+            queueView.innerText = 'Failed to queue!';
+            log('Queue failed: ' + error.message);
+          }
+
+          function showEngagedView(engagement) {
+            engagementView.innerText = 'Engaged with ' + engagement.operator.name + '!';
+            log('Engaged with: ' + engagement.operator.name);
+          }
+
+          function showNotEngagedView() {
+            engagementView.innerText = 'Not engaged.';
+            log('Engagement ended.');
+          }
+
+          salemove.addEventListener(salemove.EVENTS.QUEUE_STATE_UPDATE, onQueueStateUpdate);
+          salemove.addEventListener(salemove.EVENTS.ENGAGEMENT_START, showEngagedView);
+          salemove.addEventListener(salemove.EVENTS.ENGAGEMENT_END, showNotEngagedView);
         }).catch(function(error) {
-          log('Error initializing Salemove API: ' + error.message);
+          log('Error initializing Glia API: ' + error.message);
         });
       } else {
-        log('Salemove API (sm object) not available.');
+        log('Glia API (sm object) not available.');
       }
     }
 
