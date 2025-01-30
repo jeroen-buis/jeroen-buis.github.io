@@ -100,7 +100,7 @@
   <!-- Playground Image -->
   <img id="playground-image" src="https://source.unsplash.com/600x300/?playground" alt="Playground Image">
 
-  <div id="version">Version 1.0.9</div>
+  <div id="version">Version 1.1.0</div>
 
   <!-- Queue Engagement Section -->
   <div id="queue-view" class="interaction-box">Checking queue status...</div>
@@ -132,6 +132,23 @@
       if (typeof sm !== 'undefined' && typeof sm.getApi === 'function') {
         sm.getApi({ version: 'v1' }).then(function(salemove) {
           log('Glia API initialized.');
+
+          // Fetch all queues and listen for state updates
+          salemove.getQueues().then(function(queues) {
+            log('Queues retrieved: ' + JSON.stringify(queues));
+            
+            const queueIds = queues.map(queue => queue.id);
+            log('Listening for state updates on queues: ' + queueIds.join(', '));
+
+            // Subscribe to updates for all queues
+            salemove.subscribeToQueueStateUpdates(queueIds, function(queue) {
+              log(`Queue update for ${queue.name} (ID: ${queue.id}): State - ${queue.state.status}`);
+              log(`Media types available: ${queue.state.medias.join(', ')}`);
+            });
+
+          }).catch(function(error) {
+            log('Error fetching queues: ' + error.message);
+          });
 
           function onQueueStateUpdate(queueState) {
             if (queueState.state === queueState.QUEUE_STATES.CAN_QUEUE) {
