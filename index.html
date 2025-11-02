@@ -11,14 +11,10 @@
     :root{
       --base-font: 13px;
       --mono-font: 11.5px;
-      --pad-xxs: 2px;
       --pad-xs: 4px;
       --pad-sm: 6px;
-      --gap-xs: 6px;
-      --badge-radius: 999px;
       --btn-radius: 6px;
     }
-
     * { box-sizing: border-box; }
     html body {
       margin: 0; background: #fff; height: 100%;
@@ -35,11 +31,12 @@
     /* ---------- LAYOUT: 2/3 table + 1/3 attributes ---------- */
     .content {
       display: grid;
-      grid-template-columns: 2fr 1fr;      /* 2/3 + 1/3 */
+      grid-template-columns: 2fr 1fr; /* 2/3 + 1/3 */
       gap: 10px;
       margin: 0 16px 8px;
       align-items: start;
     }
+    @media (max-width: 980px){ .content { grid-template-columns: 1fr; } }
 
     /* Table (dense) */
     .table-wrap { overflow-x:auto; }
@@ -58,54 +55,36 @@
     tbody tr:hover { background:#f9f9f9; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: var(--mono-font); }
 
-    /* Status badges (compact) */
-    .status {
-      display:inline-block; padding: 1px 6px;
-      border-radius: var(--badge-radius); font-size: 11px; font-weight: 700;
-      color:#fff; text-transform: capitalize;
-    }
-    .status-open { background:#17a34a; }      /* green */
-    .status-closed { background:#dc2626; }    /* red */
-    .status-unstaffed, .status-full { background:#ea580c; } /* orange */
-    .status-unknown { background:#6b7280; }   /* gray */
+    /* Status badges */
+    .status { display:inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; color:#fff; text-transform: capitalize; }
+    .status-open { background:#17a34a; }
+    .status-closed { background:#dc2626; }
+    .status-unstaffed, .status-full { background:#ea580c; }
+    .status-unknown { background:#6b7280; }
 
-    /* Buttons (compact) */
-    button {
-      padding: 3px 8px; border: 1px solid #ddd; border-radius: var(--btn-radius);
-      background:#fff; cursor:pointer; font-size: 12px;
-    }
+    /* Buttons */
+    button { padding: 3px 8px; border: 1px solid #ddd; border-radius: var(--btn-radius); background:#fff; cursor:pointer; font-size: 12px; }
     button:hover { background:#f6f6f6; }
     button:disabled { opacity: .45; cursor: not-allowed; }
     .btn-row { display:flex; flex-wrap: wrap; gap: 4px; }
 
-    /* Attributes panel */
-    .card {
-      border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px;
-      background: #fff;
-    }
+    /* Panel */
+    .card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; background: #fff; }
     .card h2 { margin: 0 0 8px; font-size: 14px; }
-    .field { display:flex; flex-direction:column; gap:4px; margin-bottom: 8px; }
-    .field label { font-size: 11.5px; color:#374151; }
-    .field input {
-      padding: 6px 8px; border:1px solid #d1d5db; border-radius: 6px;
-      font-size: 12px;
-    }
-    .field input::placeholder { color:#9ca3af; }
-    .actions { display:flex; gap:6px; }
-    .hint { margin: 6px 0 0; font-size: 11px; color:#6b7280; }
+
+    /* Attr rows */
+    .attr-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; margin-bottom: 6px; align-items: center; }
+    .attr-row input { width: 100%; padding: 6px 8px; border:1px solid #d1d5db; border-radius: 6px; font-size: 12px; }
+    .attr-row .remove { border-color:#f5d0d0; }
+    .attr-row .remove:hover { background:#fee2e2; }
+    .attr-actions { display:flex; gap:6px; margin-top: 6px; }
     .json-mini { margin-top: 8px; font-size: 11.5px; background:#0b1020; color:#e5e7eb; padding:8px; border-radius:8px; max-height:140px; overflow:auto; }
 
-    /* Log (taller for more room) */
-    #log {
-      margin: 0 16px 12px; padding: 8px;
-      background:#f1f1f1; border:1px solid #ccc;
-      height: 340px; overflow-y: auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: var(--mono-font);
-    }
+    /* Log */
+    #log { margin: 0 16px 12px; padding: 8px; background:#f1f1f1; border:1px solid #ccc; height: 340px; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--mono-font); }
     #log p { margin: 0 0 4px; }
 
-    /* Modal (slightly tighter) */
+    /* Modal */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; }
     .modal { width: min(900px, 92vw); max-height: 80vh; background:#fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); display:flex; flex-direction:column; }
     .modal-header { display:flex; align-items:center; justify-content:space-between; padding: 8px 10px; border-bottom:1px solid #eee; }
@@ -113,19 +92,15 @@
     .modal-body pre { margin: 8px 0 0; padding:10px; background:#0b1020; color:#e5e7eb; border-radius:8px; font-size: 11.5px; }
     .modal-backdrop.show { display:flex; }
 
-    /* Queuing banner (tight) */
+    /* Banner */
     .banner { margin: 0 16px 8px; padding: 8px 10px; border-radius:8px; background:#fff7ed; border:1px solid #fed7aa; display:none; align-items:center; gap:8px; }
     .banner.show { display:flex; }
     .banner strong { color:#9a3412; font-size: 12px; }
-
-    @media (max-width: 980px){
-      .content { grid-template-columns: 1fr; } /* stack on small screens */
-    }
   </style>
 </head>
 <body>
   <h1>Welcome to Jeroen's test site!</h1>
-  <div id="version">Version 1.5.0 (dense + attributes)</div>
+  <div id="version">Version 1.6.0 (customAttributes)</div>
 
   <div class="toolbar">
     <button id="refreshBtn" type="button">Refresh queues</button>
@@ -139,7 +114,6 @@
     <button id="cancelQueueBtn" type="button">Cancel</button>
   </div>
 
-  <!-- 2/3 + 1/3 area -->
   <div class="content">
     <!-- Left: Queues table -->
     <div class="table-wrap">
@@ -157,32 +131,15 @@
       </table>
     </div>
 
-    <!-- Right: Attributes panel -->
+    <!-- Right: customAttributes panel -->
     <aside class="card">
-      <h2>Visitor Attributes</h2>
-      <div class="field">
-        <label for="attr_name">visitor_name</label>
-        <input id="attr_name" type="text" placeholder="e.g. John Smith">
+      <h2>Custom Attributes</h2>
+      <div id="attrsRows"></div>
+      <div class="attr-actions">
+        <button id="addAttrBtn" type="button">Add row</button>
+        <button id="saveAttrsBtn" type="button">Save to Glia</button>
+        <button id="resetAttrsBtn" type="button">Clear</button>
       </div>
-      <div class="field">
-        <label for="attr_pref_name">visitor_preferred_name</label>
-        <input id="attr_pref_name" type="text" placeholder="e.g. John">
-      </div>
-      <div class="field">
-        <label for="attr_email">visitor_email</label>
-        <input id="attr_email" type="email" placeholder="e.g. john.smith@example.com">
-      </div>
-      <div class="field">
-        <label for="attr_subject">subject</label>
-        <input id="attr_subject" type="text" placeholder="e.g. john.smith">
-      </div>
-      <div class="actions">
-        <button id="saveAttrsBtn" type="button">Save attributes</button>
-        <button id="resetAttrsBtn" type="button">Reset fields</button>
-      </div>
-      <p class="hint">
-        Saving will <em>merge</em> these into Glia custom attributes and cache them in this browser.
-      </p>
       <pre id="attrsPreview" class="json-mini mono">{}</pre>
     </aside>
   </div>
@@ -214,14 +171,13 @@
     let lastQueues = [];
     let queueTicket = null;
     let isEngaged = false;
-    let visitorQueueState = 'UNKNOWN'; // 'QUEUED' | 'CANNOT_QUEUE' | 'CAN_QUEUE' | 'UNKNOWN'
+    let visitorQueueState = 'UNKNOWN';
     let reenableTimer = null;
 
-    // queueId -> refs
-    const rowRefs = new Map();
-    const ATTRS_STORAGE_KEY = 'glia_custom_attrs_demo_v1';
+    const rowRefs = new Map(); // queueId -> refs
+    const ATTRS_STORAGE_KEY = 'glia_custom_attributes_pairs_v1';
 
-    /* ---------- utilities ---------- */
+    /* ---------- utils ---------- */
     function log(message, data) {
       const logDiv = document.getElementById('log');
       const p = document.createElement('p');
@@ -244,7 +200,6 @@
     function setLastUpdated() {
       document.querySelector('#lastUpdated small').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
     }
-
     function showBanner(text) {
       const b = document.getElementById('queueBanner');
       document.getElementById('queueBannerText').textContent = text || '';
@@ -252,71 +207,91 @@
     }
     function hideBanner() { document.getElementById('queueBanner').classList.remove('show'); }
 
-    /* ---------- attributes panel ---------- */
-    function loadAttrsFromStorage() {
-      try { return JSON.parse(localStorage.getItem(ATTRS_STORAGE_KEY) || '{}'); }
-      catch { return {}; }
+    /* ---------- attributes panel (name/value rows) ---------- */
+    function loadAttrPairs() {
+      try { return JSON.parse(localStorage.getItem(ATTRS_STORAGE_KEY) || '[]'); }
+      catch { return []; }
     }
-    function saveAttrsToStorage(obj) {
-      localStorage.setItem(ATTRS_STORAGE_KEY, JSON.stringify(obj || {}));
+    function saveAttrPairs(pairs) {
+      localStorage.setItem(ATTRS_STORAGE_KEY, JSON.stringify(pairs || []));
     }
-    function readAttrsFromForm() {
-      return {
-        visitor_name: document.getElementById('attr_name').value.trim(),
-        visitor_preferred_name: document.getElementById('attr_pref_name').value.trim(),
-        visitor_email: document.getElementById('attr_email').value.trim(),
-        subject: document.getElementById('attr_subject').value.trim()
-      };
+    function renderAttrRows(pairs) {
+      const wrap = document.getElementById('attrsRows');
+      wrap.innerHTML = '';
+      (pairs.length ? pairs : [{name:'product', value:''}]).forEach((p,i) => addAttrRow(p.name, p.value));
+      renderAttrsPreview();
     }
-    function writeAttrsToForm(attrs) {
-      document.getElementById('attr_name').value = attrs.visitor_name || '';
-      document.getElementById('attr_pref_name').value = attrs.visitor_preferred_name || '';
-      document.getElementById('attr_email').value = attrs.visitor_email || '';
-      document.getElementById('attr_subject').value = attrs.subject || '';
-      renderAttrsPreview(attrs);
+    function addAttrRow(name='', value='') {
+      const wrap = document.getElementById('attrsRows');
+      const row = document.createElement('div');
+      row.className = 'attr-row';
+      const nameInput = document.createElement('input');
+      nameInput.placeholder = 'name (e.g. product)';
+      nameInput.value = name;
+      const valueInput = document.createElement('input');
+      valueInput.placeholder = 'value';
+      valueInput.value = value;
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove';
+      removeBtn.textContent = '✕';
+      removeBtn.title = 'Remove';
+      removeBtn.addEventListener('click', () => { row.remove(); renderAttrsPreview(); persistAttrRows(); });
+      [nameInput, valueInput].forEach(inp => inp.addEventListener('input', () => { renderAttrsPreview(); persistAttrRows(); }));
+      row.appendChild(nameInput);
+      row.appendChild(valueInput);
+      row.appendChild(removeBtn);
+      wrap.appendChild(row);
     }
-    function renderAttrsPreview(attrs) {
-      document.getElementById('attrsPreview').textContent = JSON.stringify(attrs || {}, null, 2);
+    function readAttrPairsFromUI() {
+      const rows = Array.from(document.querySelectorAll('#attrsRows .attr-row'));
+      return rows.map(r => {
+        const [nameEl, valueEl] = r.querySelectorAll('input');
+        return { name: nameEl.value.trim(), value: valueEl.value.trim() };
+      }).filter(p => p.name !== '');
     }
-
+    function renderAttrsPreview() {
+      const pairs = readAttrPairsFromUI();
+      const obj = {};
+      pairs.forEach(p => { if (p.name !== '') obj[p.name] = p.value; });
+      document.getElementById('attrsPreview').textContent = JSON.stringify(obj, null, 2);
+    }
+    function persistAttrRows() {
+      saveAttrPairs(readAttrPairsFromUI());
+    }
     async function saveAttributesToGlia() {
       if (!gliaApi) { alert('Glia not ready'); return; }
-      const attrs = readAttrsFromForm();
-      // Build payload with only non-empty keys (avoid overwriting with empty strings)
+      const pairs = readAttrPairsFromUI();
       const payload = {};
-      Object.entries(attrs).forEach(([k,v]) => { if (v !== '') payload[k] = v; });
-      if (Object.keys(payload).length === 0) {
-        log('No attributes to save (all empty)');
-        return;
-      }
+      pairs.forEach(p => { if (p.name !== '') payload[p.name] = p.value; });
+      if (Object.keys(payload).length === 0) { log('No attributes to save'); return; }
       try {
         await gliaApi.updateInformation({
           customAttributesUpdateMethod: 'merge',
           customAttributes: payload
         });
-        log('Saved custom attributes', payload);
-        saveAttrsToStorage(attrs);
-        renderAttrsPreview(attrs);
+        log('Saved customAttributes', payload);
+        saveAttrPairs(pairs);
+        renderAttrsPreview();
       } catch (err) {
         log('Failed to save attributes: ' + (err?.message || err));
         alert('Failed to save attributes: ' + (err?.message || err));
       }
     }
-
-    function resetAttributesForm() {
-      writeAttrsToForm({});
-      saveAttrsToStorage({});
-      log('Cleared local attribute fields');
+    function clearAttributes() {
+      document.getElementById('attrsRows').innerHTML = '';
+      addAttrRow('product','');
+      persistAttrRows();
+      renderAttrsPreview();
+      log('Cleared custom attribute rows');
     }
 
-    /* ---------- actions ---------- */
+    /* ---------- queue actions ---------- */
     function createActionButtons(q) {
       const container = document.createElement('div');
       container.className = 'btn-row';
-
       const allowed = new Set((q.state && Array.isArray(q.state.medias)) ? q.state.medias : []);
       const all = ['audio','phone','text','video','messaging'];
-
       const refs = {};
       all.forEach(m => {
         const btn = document.createElement('button');
@@ -327,10 +302,8 @@
         container.appendChild(btn);
         refs[m] = btn;
       });
-
       return { node: container, buttons: refs };
     }
-
     function labelForMedium(m) {
       switch (m) {
         case 'audio': return 'Start Audio';
@@ -341,11 +314,7 @@
         default: return 'Start ' + m;
       }
     }
-
-    function isQueueOpen(q) {
-      return q && q.state && String(q.state.status).toLowerCase() === 'open';
-    }
-
+    function isQueueOpen(q) { return q && q.state && String(q.state.status).toLowerCase() === 'open'; }
     async function queueForEngagement(q, medium) {
       if (!gliaApi) return;
       try {
@@ -363,7 +332,6 @@
         alert('Failed to queue: ' + (err?.message || err));
       }
     }
-
     function cancelQueuing() {
       try {
         if (queueTicket && typeof queueTicket.cancel === 'function') {
@@ -372,89 +340,52 @@
         } else {
           log('No direct ticket handle; waiting for state to reflect cancellation');
         }
-      } catch (e) {
-        log('Cancel error: ' + (e?.message || e));
-      }
+      } catch (e) { log('Cancel error: ' + (e?.message || e)); }
     }
 
     /* ---------- renderers ---------- */
     function renderTable(queues) {
       const tbody = document.querySelector('#queuesTable tbody');
-      tbody.innerHTML = '';
-      rowRefs.clear();
-
+      tbody.innerHTML = ''; rowRefs.clear();
       queues.slice().sort((a,b) => (a.name||'').localeCompare(b.name||'')).forEach(q => {
         const tr = document.createElement('tr');
 
-        const tdName = document.createElement('td');
-        tdName.textContent = q.name || '(no name)';
-        tr.appendChild(tdName);
-
-        const tdId = document.createElement('td');
-        tdId.className = 'mono';
-        tdId.textContent = q.id || '';
-        tr.appendChild(tdId);
+        const tdName = document.createElement('td'); tdName.textContent = q.name || '(no name)'; tr.appendChild(tdName);
+        const tdId = document.createElement('td'); tdId.className = 'mono'; tdId.textContent = q.id || ''; tr.appendChild(tdId);
 
         const tdStatus = document.createElement('td');
         const badge = document.createElement('span');
         const status = (q.state && q.state.status) ? q.state.status : 'unknown';
-        badge.className = statusClass(status);
-        badge.textContent = status;
-        tdStatus.appendChild(badge);
-        tr.appendChild(tdStatus);
+        badge.className = statusClass(status); badge.textContent = status; tdStatus.appendChild(badge); tr.appendChild(tdStatus);
 
-        const tdMedias = document.createElement('td');
-        tdMedias.textContent = formatMedias(q.state && q.state.medias);
-        tr.appendChild(tdMedias);
+        const tdMedias = document.createElement('td'); tdMedias.textContent = formatMedias(q.state && q.state.medias); tr.appendChild(tdMedias);
 
-        const tdActions = document.createElement('td');
-        const actions = createActionButtons(q);
-        tdActions.appendChild(actions.node);
-        tr.appendChild(tdActions);
+        const tdActions = document.createElement('td'); const actions = createActionButtons(q); tdActions.appendChild(actions.node); tr.appendChild(tdActions);
 
         tbody.appendChild(tr);
-
-        rowRefs.set(q.id, {
-          row: tr,
-          statusBadge: badge,
-          actionButtons: actions.buttons
-        });
+        rowRefs.set(q.id, { row: tr, statusBadge: badge, actionButtons: actions.buttons });
       });
       setLastUpdated();
       queues.forEach(updateRowFromQueueState);
     }
-
     function updateRowFromQueueState(q) {
-      const ref = rowRefs.get(q.id);
-      if (!ref) return;
-
+      const ref = rowRefs.get(q.id); if (!ref) return;
       const status = (q.state && q.state.status) ? q.state.status : 'unknown';
-      ref.statusBadge.className = statusClass(status);
-      ref.statusBadge.textContent = status;
-
-      // block only when actually engaged or queued
+      ref.statusBadge.className = statusClass(status); ref.statusBadge.textContent = status;
       const allowed = new Set((q.state && Array.isArray(q.state.medias)) ? q.state.medias : []);
       const open = isQueueOpen(q);
       const globallyBlocked = isEngaged || visitorQueueState === 'QUEUED';
-
       Object.entries(ref.actionButtons).forEach(([medium, btn]) => {
         btn.disabled = !open || !allowed.has(medium) || globallyBlocked;
       });
     }
-
-    function renderJsonModal() {
-      document.getElementById('jsonDump').textContent = JSON.stringify(lastQueues, null, 2);
-    }
-
+    function renderJsonModal() { document.getElementById('jsonDump').textContent = JSON.stringify(lastQueues, null, 2); }
     function forceEnableAllRows() {
       lastQueues.forEach(q => {
-        const ref = rowRefs.get(q.id);
-        if (!ref) return;
+        const ref = rowRefs.get(q.id); if (!ref) return;
         const allowed = new Set((q.state && Array.isArray(q.state.medias)) ? q.state.medias : []);
         const open = isQueueOpen(q);
-        Object.entries(ref.actionButtons).forEach(([medium, btn]) => {
-          btn.disabled = !(open && allowed.has(medium));
-        });
+        Object.entries(ref.actionButtons).forEach(([m, btn]) => { btn.disabled = !(open && allowed.has(m)); });
       });
       log('Force-enabled action buttons based on queue openness');
     }
@@ -463,19 +394,14 @@
     function refreshQueues() {
       if (!gliaApi) return Promise.resolve();
       return gliaApi.getQueues().then(queues => {
-        lastQueues = queues || [];
-        renderTable(lastQueues);
+        lastQueues = queues || []; renderTable(lastQueues);
         log('Queues refreshed (' + lastQueues.length + ')');
-
         const ids = lastQueues.map(q => q.id);
         if (typeof gliaApi.subscribeToQueueStateUpdates === 'function') {
           gliaApi.subscribeToQueueStateUpdates(ids, onQueueState);
         }
-      }).catch(err => {
-        log('getQueues() failed: ' + (err && err.message ? err.message : err));
-      });
+      }).catch(err => { log('getQueues() failed: ' + (err && err.message ? err.message : err)); });
     }
-
     function onQueueState(queue) { updateRowFromQueueState(queue); }
 
     /* ---------- state listeners ---------- */
@@ -483,54 +409,35 @@
       try {
         const state = queuingState?.state || '';
         if (state === queuingState.QUEUE_STATES.QUEUED) {
-          visitorQueueState = 'QUEUED';
-          queueTicket = queuingState.ticket || queueTicket;
+          visitorQueueState = 'QUEUED'; queueTicket = queuingState.ticket || queueTicket;
           showBanner(`You are queued (reason: ${queuingState?.transitionReason || 'n/a'})`);
           rowRefs.forEach(ref => Object.values(ref.actionButtons).forEach(btn => btn.disabled = true));
         } else if (state === queuingState.QUEUE_STATES.CANNOT_QUEUE) {
-          visitorQueueState = 'CANNOT_QUEUE';
-          queueTicket = null;
-          hideBanner();
+          visitorQueueState = 'CANNOT_QUEUE'; queueTicket = null; hideBanner();
           lastQueues.forEach(updateRowFromQueueState);
         } else {
-          visitorQueueState = 'CAN_QUEUE';
-          queueTicket = null;
-          hideBanner();
+          visitorQueueState = 'CAN_QUEUE'; queueTicket = null; hideBanner();
           lastQueues.forEach(updateRowFromQueueState);
         }
-      } catch (e) {
-        log('Error handling visitor queueing state: ' + (e?.message || e));
-      }
+      } catch (e) { log('Error handling visitor queueing state: ' + (e?.message || e)); }
     }
-
     function onEngagementStart(e) {
-      isEngaged = true;
-      log('ENGAGEMENT_START');
+      isEngaged = true; log('ENGAGEMENT_START');
       rowRefs.forEach(ref => Object.values(ref.actionButtons).forEach(btn => btn.disabled = true));
     }
-
     function onEngagementEnd(e) {
-      isEngaged = false;
-      visitorQueueState = 'CAN_QUEUE';
-      queueTicket = null;
-      hideBanner();
+      isEngaged = false; visitorQueueState = 'CAN_QUEUE'; queueTicket = null; hideBanner();
       log('ENGAGEMENT_END — enabling buttons and refreshing queues');
-
       if (reenableTimer) clearTimeout(reenableTimer);
-      reenableTimer = setTimeout(async () => {
-        await refreshQueues();
-        forceEnableAllRows();
-        setTimeout(forceEnableAllRows, 800); // safety pass
-      }, 300);
+      reenableTimer = setTimeout(async () => { await refreshQueues(); forceEnableAllRows(); setTimeout(forceEnableAllRows, 800); }, 300);
     }
-
     function attachGlobalListeners(glia) {
       glia.addEventListener(glia.EVENTS.QUEUE_STATE_UPDATE, onVisitorQueueingState);
       glia.addEventListener(glia.EVENTS.ENGAGEMENT_START, onEngagementStart);
       glia.addEventListener(glia.EVENTS.ENGAGEMENT_END, onEngagementEnd);
     }
 
-    /* ---------- modal + DOM controls ---------- */
+    /* ---------- modal + DOM ---------- */
     function openJsonModal() { renderJsonModal(); document.getElementById('jsonModal').classList.add('show'); }
     function closeJsonModal() { document.getElementById('jsonModal').classList.remove('show'); }
 
@@ -538,40 +445,23 @@
     function initializeSalemove() {
       if (typeof sm !== 'undefined' && typeof sm.getApi === 'function') {
         sm.getApi({ version: 'v1' }).then(function(glia) {
-          gliaApi = glia;
-          log('Salemove API initialized.');
-
+          gliaApi = glia; log('Salemove API initialized.');
           attachGlobalListeners(glia);
+          renderAttrRows(loadAttrPairs());
           refreshQueues();
 
-          // Prefill attributes from local cache, then push once on load (optional)
-          writeAttrsToForm(loadAttrsFromStorage());
-
-          // example: set a simple custom attribute so we see something in logs
+          // example attribute to see something in logs on first load if you want
           glia.updateInformation({
             customAttributesUpdateMethod: 'merge',
             customAttributes: { vip: 'true' }
-          }).then(function() {
-            log('Visitor info updated (customAttributes.vip=true).');
-          }).catch(function(error) {
-            if (error.cause === glia.ERRORS.NETWORK_TIMEOUT) {
-              log('Error: Network timeout while updating visitor info.');
-            } else {
-              log('Error updating visitor info: ' + error.message);
-            }
-          });
-
-        }).catch(function(error) {
-          log('Error initializing Salemove API: ' + error.message);
-        });
-      } else {
-        log('Salemove API (sm object) not available.');
-      }
+          }).then(() => log('Visitor info updated (customAttributes.vip=true).'))
+            .catch(error => log('Error updating visitor info: ' + (error?.message || error)));
+        }).catch(function(error) { log('Error initializing Salemove API: ' + error.message); });
+      } else { log('Salemove API (sm object) not available.'); }
     }
 
     window.addEventListener('DOMContentLoaded', function() {
       log('Page fully loaded and DOM is ready.');
-
       // table controls
       document.getElementById('refreshBtn').addEventListener('click', refreshQueues);
       document.getElementById('viewJsonBtn').addEventListener('click', openJsonModal);
@@ -580,9 +470,10 @@
       window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeJsonModal(); });
       document.getElementById('cancelQueueBtn').addEventListener('click', cancelQueuing);
 
-      // attribute panel
+      // customAttributes panel
+      document.getElementById('addAttrBtn').addEventListener('click', () => { addAttrRow('', ''); });
       document.getElementById('saveAttrsBtn').addEventListener('click', saveAttributesToGlia);
-      document.getElementById('resetAttrsBtn').addEventListener('click', resetAttributesForm);
+      document.getElementById('resetAttrsBtn').addEventListener('click', clearAttributes);
     });
   </script>
 </body>
