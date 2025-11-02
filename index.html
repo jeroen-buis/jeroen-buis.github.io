@@ -8,81 +8,201 @@
   <meta name="theme-color" content="#fafafa">
   <style>
     * { box-sizing: border-box; }
-    html body { margin: 0; background-color: #ffffff; height: 100%; }
-    #version { margin-top: 20px; font-size: 12px; color: #666; }
-    #log {
-      margin: 20px; padding: 10px; background-color: #f1f1f1; border: 1px solid #ccc;
-      height: 400px; overflow-y: scroll; font-family: monospace;
-    }
+    html body { margin: 0; background: #fff; height: 100%; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+    h1 { margin: 20px; }
+    #version { margin: 0 20px 10px; font-size: 12px; color: #666; }
+    .toolbar { display:flex; gap:10px; align-items:center; margin: 0 20px 10px; }
+
+    /* Table */
+    .table-wrap { margin: 0 20px 20px; overflow-x:auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { text-align: left; font-weight: 600; border-bottom: 2px solid #ddd; padding: 10px 8px; background:#fafafa; }
+    tbody td { border-bottom: 1px solid #eee; padding: 8px; vertical-align: top; }
+    tbody tr:hover { background:#f9f9f9; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; }
+
+    /* Status badges */
+    .status { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color:#fff; }
+    .status-open { background:#17a34a; }      /* green */
+    .status-closed { background:#dc2626; }    /* red */
+    .status-unstaffed, .status-full { background:#ea580c; } /* orange */
+    .status-unknown { background:#6b7280; }   /* gray */
+
+    /* Log */
+    #log { margin: 0 20px 20px; padding: 10px; background:#f1f1f1; border:1px solid #ccc;
+           height: 220px; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     #log p { margin: 0 0 6px; }
+
+    /* Buttons */
+    button { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; background:#fff; cursor:pointer; }
+    button:hover { background:#f6f6f6; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; }
+    .modal { width: min(920px, 92vw); max-height: 82vh; background:#fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); display:flex; flex-direction:column; }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; padding: 12px 14px; border-bottom:1px solid #eee; }
+    .modal-body { padding: 0 14px 14px; overflow:auto; }
+    .modal-body pre { margin: 12px 0 0; padding:12px; background:#0b1020; color:#e5e7eb; border-radius:8px; }
+    .modal-backdrop.show { display:flex; }
   </style>
 </head>
 <body>
   <h1>Welcome to Jeroen's test site!</h1>
-  <a href="/">Navigate</a>
+  <div id="version">Version 1.2.0</div>
 
-  <div id="version">Version 1.1.0</div>
+  <div class="toolbar">
+    <button id="refreshBtn" type="button">Refresh queues</button>
+    <button id="viewJsonBtn" type="button">View JSON</button>
+    <span id="lastUpdated" style="margin-left:auto; font-size:12px; color:#666;"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table id="queuesTable" aria-label="Queues">
+      <thead>
+        <tr>
+          <th>Queue Name</th>
+          <th>Queue ID</th>
+          <th>Status</th>
+          <th>Medias</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- rows injected here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Log (kept for debugging) -->
   <div id="log"></div>
 
+  <!-- Modal -->
+  <div id="jsonModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="jsonTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <strong id="jsonTitle">Queues JSON</strong>
+        <button id="closeJsonBtn" type="button" aria-label="Close">Close</button>
+      </div>
+      <div class="modal-body">
+        <pre id="jsonDump" class="mono"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Glia script -->
   <script async
     src="https://api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"
     onload="log('salemove_integration.js loaded'); initializeSalemove();">
   </script>
 
   <script>
-    // Simple logger
+    let gliaApi = null;
+    let lastQueues = [];
+
+    /* ---------- utilities ---------- */
     function log(message, data) {
-      var logDiv = document.getElementById('log');
-      var p = document.createElement('p');
-      var suffix = data !== undefined ? ' ' + safeJson(data) : '';
+      const logDiv = document.getElementById('log');
+      const p = document.createElement('p');
+      const suffix = data !== undefined ? ' ' + safeJson(data) : '';
       p.textContent = new Date().toISOString() + ': ' + message + suffix;
       logDiv.appendChild(p);
       logDiv.scrollTop = logDiv.scrollHeight;
     }
     function safeJson(v) {
       try { return typeof v === 'string' ? v : JSON.stringify(v); }
-      catch (e) { return String(v); }
+      catch { return String(v); }
+    }
+    function formatMedias(arr) {
+      if (!Array.isArray(arr) || !arr.length) return '–';
+      return arr.join(', ');
+    }
+    function statusClass(status) {
+      switch ((status || '').toLowerCase()) {
+        case 'open': return 'status status-open';
+        case 'closed': return 'status status-closed';
+        case 'unstaffed': return 'status status-unstaffed';
+        case 'full': return 'status status-full';
+        default: return 'status status-unknown';
+      }
+    }
+    function setLastUpdated() {
+      document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
     }
 
-    // Pretty-print all queues
-    function dumpQueues(glia, tag) {
-      glia.getQueues().then(function(queues) {
-        if (!queues || !queues.length) {
-          log(tag + ' queues: none');
-          return;
-        }
-        queues.forEach(function(q) {
-          var summary = {
-            id: q.id,
-            name: q.name,
-            state: q.state || null   // often includes { status: "open"|"closed"|"full", ... }
-          };
-          log(tag + ' queue', summary);
-        });
-      }).catch(function(err) {
-        log('getQueues() failed:', err && err.message ? err.message : err);
+    /* ---------- renderers ---------- */
+    function renderTable(queues) {
+      const tbody = document.querySelector('#queuesTable tbody');
+      tbody.innerHTML = '';
+      // sort by name asc
+      queues.slice().sort((a,b) => (a.name||'').localeCompare(b.name||'')).forEach(q => {
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        tdName.textContent = q.name || '(no name)';
+        tr.appendChild(tdName);
+
+        const tdId = document.createElement('td');
+        tdId.className = 'mono';
+        tdId.textContent = q.id || '';
+        tr.appendChild(tdId);
+
+        const tdStatus = document.createElement('td');
+        const badge = document.createElement('span');
+        const status = (q.state && q.state.status) ? q.state.status : 'unknown';
+        badge.className = statusClass(status);
+        badge.textContent = status;
+        tdStatus.appendChild(badge);
+        tr.appendChild(tdStatus);
+
+        const tdMedias = document.createElement('td');
+        tdMedias.textContent = formatMedias(q.state && q.state.medias);
+        tr.appendChild(tdMedias);
+
+        tbody.appendChild(tr);
+      });
+      setLastUpdated();
+    }
+
+    function renderJsonModal() {
+      const dump = document.getElementById('jsonDump');
+      dump.textContent = JSON.stringify(lastQueues, null, 2);
+    }
+
+    /* ---------- data flow ---------- */
+    function refreshQueues() {
+      if (!gliaApi) return;
+      return gliaApi.getQueues().then(queues => {
+        lastQueues = queues || [];
+        renderTable(lastQueues);
+        log('Queues refreshed (' + lastQueues.length + ')');
+      }).catch(err => {
+        log('getQueues() failed: ' + (err && err.message ? err.message : err));
       });
     }
 
-    // Attach queue listeners
     function attachQueueListeners(glia) {
-      // Initial snapshot
-      dumpQueues(glia, 'Initial');
-
-      // Subscribe to state updates
+      refreshQueues(); // initial
       glia.addEventListener(glia.EVENTS.QUEUE_STATE_UPDATE, function () {
         log('QUEUE_STATE_UPDATE received — refreshing queues…');
-        dumpQueues(glia, 'Update');
+        refreshQueues();
       });
     }
 
-    // Init Glia + set a sample custom attribute
+    /* ---------- modal controls ---------- */
+    function openJsonModal() {
+      renderJsonModal();
+      document.getElementById('jsonModal').classList.add('show');
+    }
+    function closeJsonModal() {
+      document.getElementById('jsonModal').classList.remove('show');
+    }
+
+    /* ---------- init ---------- */
     function initializeSalemove() {
       if (typeof sm !== 'undefined' && typeof sm.getApi === 'function') {
         sm.getApi({ version: 'v1' }).then(function(glia) {
+          gliaApi = glia;
           log('Salemove API initialized.');
-
-          // subscribe to queue updates
           attachQueueListeners(glia);
 
           // example: set a custom attribute
@@ -107,8 +227,16 @@
       }
     }
 
+    /* ---------- DOM hooks ---------- */
     window.addEventListener('DOMContentLoaded', function() {
       log('Page fully loaded and DOM is ready.');
+      document.getElementById('refreshBtn').addEventListener('click', refreshQueues);
+      document.getElementById('viewJsonBtn').addEventListener('click', openJsonModal);
+      document.getElementById('closeJsonBtn').addEventListener('click', closeJsonModal);
+      document.getElementById('jsonModal').addEventListener('click', (e) => {
+        if (e.target.id === 'jsonModal') closeJsonModal(); // click outside
+      });
+      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeJsonModal(); });
     });
   </script>
 </body>
