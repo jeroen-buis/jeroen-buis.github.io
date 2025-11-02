@@ -56,7 +56,7 @@
 </head>
 <body>
   <h1>Welcome to Jeroen's test site!</h1>
-  <div id="version">Version 1.4.1</div>
+  <div id="version">Version 1.4.2</div>
 
   <div class="toolbar">
     <button id="refreshBtn" type="button">Refresh queues</button>
@@ -81,16 +81,12 @@
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- rows injected here -->
-      </tbody>
+      <tbody></tbody>
     </table>
   </div>
 
-  <!-- Log (kept for debugging) -->
   <div id="log"></div>
 
-  <!-- Modal -->
   <div id="jsonModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="jsonTitle">
     <div class="modal">
       <div class="modal-header">
@@ -103,7 +99,6 @@
     </div>
   </div>
 
-  <!-- Glia script -->
   <script async
     src="https://api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"
     onload="log('salemove_integration.js loaded'); initializeSalemove();">
@@ -117,7 +112,7 @@
     let visitorQueueState = 'UNKNOWN'; // 'QUEUED' | 'CANNOT_QUEUE' | 'CAN_QUEUE' | 'UNKNOWN'
     let reenableTimer = null;
 
-    // map: queueId -> { row, statusBadge, actionButtons: { audio, phone, text, video, messaging } }
+    // queueId -> refs
     const rowRefs = new Map();
 
     /* ---------- utilities ---------- */
@@ -163,7 +158,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = labelForMedium(m);
-        btn.disabled = !allowed.has(m) || !isQueueOpen(q);
+        btn.disabled = !allowed.has(m) || !isQueueOpen(q); // initial
         btn.addEventListener('click', () => queueForEngagement(q, m));
         container.appendChild(btn);
         refs[m] = btn;
@@ -263,7 +258,7 @@
       });
       setLastUpdated();
 
-      // Apply current global states
+      // apply current global states
       queues.forEach(updateRowFromQueueState);
     }
 
@@ -271,21 +266,24 @@
       const ref = rowRefs.get(q.id);
       if (!ref) return;
 
-      // status badge
       const status = (q.state && q.state.status) ? q.state.status : 'unknown';
       ref.statusBadge.className = statusClass(status);
       ref.statusBadge.textContent = status;
 
-      // enable/disable media buttons
+      // Only block when actually engaged or queued; DON'T globally block on CANNOT_QUEUE
       const allowed = new Set((q.state && Array.isArray(q.state.medias)) ? q.state.medias : []);
       const open = isQueueOpen(q);
-      const globallyBlocked = isEngaged || visitorQueueState === 'QUEUED' || visitorQueueState === 'CANNOT_QUEUE';
+      const globallyBlocked = isEngaged || visitorQueueState === 'QUEUED';
+
       Object.entries(ref.actionButtons).forEach(([medium, btn]) => {
         btn.disabled = !open || !allowed.has(medium) || globallyBlocked;
       });
     }
 
-    // Force-enable after ENGAGEMENT_END to beat race conditions
+    function renderJsonModal() {
+      document.getElementById('jsonDump').textContent = JSON.stringify(lastQueues, null, 2);
+    }
+
     function forceEnableAllRows() {
       lastQueues.forEach(q => {
         const ref = rowRefs.get(q.id);
@@ -299,10 +297,6 @@
       log('Force-enabled action buttons based on queue openness');
     }
 
-    function renderJsonModal() {
-      document.getElementById('jsonDump').textContent = JSON.stringify(lastQueues, null, 2);
-    }
-
     /* ---------- data flow ---------- */
     function refreshQueues() {
       if (!gliaApi) return Promise.resolve();
@@ -311,7 +305,6 @@
         renderTable(lastQueues);
         log('Queues refreshed (' + lastQueues.length + ')');
 
-        // Subscribe per-queue state changes (re-subscribe on refresh)
         const ids = lastQueues.map(q => q.id);
         if (typeof gliaApi.subscribeToQueueStateUpdates === 'function') {
           gliaApi.subscribeToQueueStateUpdates(ids, onQueueState);
@@ -325,7 +318,7 @@
       updateRowFromQueueState(queue);
     }
 
-    // Visitor-level queueing state (QUEUED / CAN_QUEUE / CANNOT_QUEUE etc.)
+    /* ---------- state listeners ---------- */
     function onVisitorQueueingState(queuingState) {
       try {
         const state = queuingState?.state || '';
@@ -338,7 +331,8 @@
           visitorQueueState = 'CANNOT_QUEUE';
           queueTicket = null;
           hideBanner();
-          rowRefs.forEach(ref => Object.values(ref.actionButtons).forEach(btn => btn.disabled = true));
+          // Do NOT globally disable; let per-queue state decide
+          lastQueues.forEach(updateRowFromQueueState);
         } else {
           visitorQueueState = 'CAN_QUEUE';
           queueTicket = null;
@@ -350,7 +344,6 @@
       }
     }
 
-    // Engagement lifecycle
     function onEngagementStart(e) {
       isEngaged = true;
       log('ENGAGEMENT_START');
@@ -359,16 +352,18 @@
 
     function onEngagementEnd(e) {
       isEngaged = false;
+      visitorQueueState = 'CAN_QUEUE';
       queueTicket = null;
       hideBanner();
       log('ENGAGEMENT_END — enabling buttons and refreshing queues');
 
-      // debounce to let queue/visitor state settle, then refresh & force-enable
       if (reenableTimer) clearTimeout(reenableTimer);
       reenableTimer = setTimeout(async () => {
         await refreshQueues();
         forceEnableAllRows();
-      }, 400);
+        // safety pass
+        setTimeout(forceEnableAllRows, 800);
+      }, 300);
     }
 
     function attachGlobalListeners(glia) {
@@ -391,7 +386,6 @@
           attachGlobalListeners(glia);
           refreshQueues();
 
-          // example: set a custom attribute
           glia.updateInformation({
             customAttributesUpdateMethod: 'merge',
             customAttributes: { vip: 'true' }
