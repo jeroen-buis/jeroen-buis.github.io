@@ -56,7 +56,7 @@
 </head>
 <body>
   <h1>Welcome to Jeroen's test site!</h1>
-  <div id="version">Version 1.4.0</div>
+  <div id="version">Version 1.4.1</div>
 
   <div class="toolbar">
     <button id="refreshBtn" type="button">Refresh queues</button>
@@ -113,6 +113,9 @@
     let gliaApi = null;
     let lastQueues = [];
     let queueTicket = null;
+    let isEngaged = false;
+    let visitorQueueState = 'UNKNOWN'; // 'QUEUED' | 'CANNOT_QUEUE' | 'CAN_QUEUE' | 'UNKNOWN'
+    let reenableTimer = null;
 
     // map: queueId -> { row, statusBadge, actionButtons: { audio, phone, text, video, messaging } }
     const rowRefs = new Map();
@@ -259,6 +262,9 @@
         });
       });
       setLastUpdated();
+
+      // Apply current global states
+      queues.forEach(updateRowFromQueueState);
     }
 
     function updateRowFromQueueState(q) {
@@ -273,9 +279,24 @@
       // enable/disable media buttons
       const allowed = new Set((q.state && Array.isArray(q.state.medias)) ? q.state.medias : []);
       const open = isQueueOpen(q);
+      const globallyBlocked = isEngaged || visitorQueueState === 'QUEUED' || visitorQueueState === 'CANNOT_QUEUE';
       Object.entries(ref.actionButtons).forEach(([medium, btn]) => {
-        btn.disabled = !open || !allowed.has(medium) || !!queueTicket; // disable if queued
+        btn.disabled = !open || !allowed.has(medium) || globallyBlocked;
       });
+    }
+
+    // Force-enable after ENGAGEMENT_END to beat race conditions
+    function forceEnableAllRows() {
+      lastQueues.forEach(q => {
+        const ref = rowRefs.get(q.id);
+        if (!ref) return;
+        const allowed = new Set((q.state && Array.isArray(q.state.medias)) ? q.state.medias : []);
+        const open = isQueueOpen(q);
+        Object.entries(ref.actionButtons).forEach(([medium, btn]) => {
+          btn.disabled = !(open && allowed.has(medium));
+        });
+      });
+      log('Force-enabled action buttons based on queue openness');
     }
 
     function renderJsonModal() {
@@ -284,7 +305,7 @@
 
     /* ---------- data flow ---------- */
     function refreshQueues() {
-      if (!gliaApi) return;
+      if (!gliaApi) return Promise.resolve();
       return gliaApi.getQueues().then(queues => {
         lastQueues = queues || [];
         renderTable(lastQueues);
@@ -301,7 +322,6 @@
     }
 
     function onQueueState(queue) {
-      // Called for specific queue updates
       updateRowFromQueueState(queue);
     }
 
@@ -310,20 +330,19 @@
       try {
         const state = queuingState?.state || '';
         if (state === queuingState.QUEUE_STATES.QUEUED) {
+          visitorQueueState = 'QUEUED';
           queueTicket = queuingState.ticket || queueTicket;
           showBanner(`You are queued (reason: ${queuingState?.transitionReason || 'n/a'})`);
-          // disable all action buttons while queued
           rowRefs.forEach(ref => Object.values(ref.actionButtons).forEach(btn => btn.disabled = true));
         } else if (state === queuingState.QUEUE_STATES.CANNOT_QUEUE) {
+          visitorQueueState = 'CANNOT_QUEUE';
           queueTicket = null;
           hideBanner();
-          // disable all actions; user cannot queue right now
           rowRefs.forEach(ref => Object.values(ref.actionButtons).forEach(btn => btn.disabled = true));
         } else {
-          // can queue
+          visitorQueueState = 'CAN_QUEUE';
           queueTicket = null;
           hideBanner();
-          // re-enable based on each queue's open/medias
           lastQueues.forEach(updateRowFromQueueState);
         }
       } catch (e) {
@@ -333,25 +352,27 @@
 
     // Engagement lifecycle
     function onEngagementStart(e) {
+      isEngaged = true;
       log('ENGAGEMENT_START');
-      // while engaged, disable all action buttons
       rowRefs.forEach(ref => Object.values(ref.actionButtons).forEach(btn => btn.disabled = true));
     }
 
     function onEngagementEnd(e) {
-      log('ENGAGEMENT_END — enabling buttons and refreshing queues');
+      isEngaged = false;
       queueTicket = null;
       hideBanner();
-      // re-enable per-queue based on current state
-      lastQueues.forEach(updateRowFromQueueState);
-      // pull a fresh snapshot (optional but helps if statuses changed)
-      refreshQueues();
+      log('ENGAGEMENT_END — enabling buttons and refreshing queues');
+
+      // debounce to let queue/visitor state settle, then refresh & force-enable
+      if (reenableTimer) clearTimeout(reenableTimer);
+      reenableTimer = setTimeout(async () => {
+        await refreshQueues();
+        forceEnableAllRows();
+      }, 400);
     }
 
     function attachGlobalListeners(glia) {
-      // Visitor queueing state
       glia.addEventListener(glia.EVENTS.QUEUE_STATE_UPDATE, onVisitorQueueingState);
-      // Engagement lifecycle
       glia.addEventListener(glia.EVENTS.ENGAGEMENT_START, onEngagementStart);
       glia.addEventListener(glia.EVENTS.ENGAGEMENT_END, onEngagementEnd);
     }
