@@ -56,7 +56,7 @@
 </head>
 <body>
   <h1>Welcome to Jeroen's test site!</h1>
-  <div id="version">Version 1.3.0</div>
+  <div id="version">Version 1.4.0</div>
 
   <div class="toolbar">
     <button id="refreshBtn" type="button">Refresh queues</button>
@@ -195,7 +195,6 @@
         }
         log('Queueing for engagement...', { queue: q.name, medium });
         const ticket = await gliaApi.queueForEngagement(medium, opts);
-        // Some SDKs return a ticket only via state; we keep local too if available.
         if (ticket && typeof ticket.cancel === 'function') queueTicket = ticket;
       } catch (err) {
         log('Failed to queue: ' + (err?.message || err));
@@ -209,7 +208,6 @@
           queueTicket.cancel();
           log('Requested queue cancel');
         } else {
-          // If we don't have a direct ticket handle, still try the API helper if available in your SDK version.
           log('No direct ticket handle; waiting for state to reflect cancellation');
         }
       } catch (e) {
@@ -280,12 +278,6 @@
       });
     }
 
-    function enableDisableAllActions(disabled) {
-      rowRefs.forEach(ref => {
-        Object.values(ref.actionButtons).forEach(btn => { btn.disabled = disabled ? true : btn.disabled; });
-      });
-    }
-
     function renderJsonModal() {
       document.getElementById('jsonDump').textContent = JSON.stringify(lastQueues, null, 2);
     }
@@ -339,9 +331,29 @@
       }
     }
 
+    // Engagement lifecycle
+    function onEngagementStart(e) {
+      log('ENGAGEMENT_START');
+      // while engaged, disable all action buttons
+      rowRefs.forEach(ref => Object.values(ref.actionButtons).forEach(btn => btn.disabled = true));
+    }
+
+    function onEngagementEnd(e) {
+      log('ENGAGEMENT_END — enabling buttons and refreshing queues');
+      queueTicket = null;
+      hideBanner();
+      // re-enable per-queue based on current state
+      lastQueues.forEach(updateRowFromQueueState);
+      // pull a fresh snapshot (optional but helps if statuses changed)
+      refreshQueues();
+    }
+
     function attachGlobalListeners(glia) {
-      // Listen for visitor’s queueing state updates
+      // Visitor queueing state
       glia.addEventListener(glia.EVENTS.QUEUE_STATE_UPDATE, onVisitorQueueingState);
+      // Engagement lifecycle
+      glia.addEventListener(glia.EVENTS.ENGAGEMENT_START, onEngagementStart);
+      glia.addEventListener(glia.EVENTS.ENGAGEMENT_END, onEngagementEnd);
     }
 
     /* ---------- modal + DOM controls ---------- */
