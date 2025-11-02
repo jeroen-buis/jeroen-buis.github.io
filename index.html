@@ -1,6 +1,5 @@
 <!doctype html>
 <html class="no-js" lang="">
-
 <head>
   <meta charset="utf-8">
   <title>Jeroen's test site</title>
@@ -8,82 +7,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fafafa">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html body {
-      margin: 0;
-      background-color: #ffffff;
-      height: 100%;
-    }
-
-    /* Version styling */
-    #version {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #666;
-    }
-
-    /* Log section styling */
+    * { box-sizing: border-box; }
+    html body { margin: 0; background-color: #ffffff; height: 100%; }
+    #version { margin-top: 20px; font-size: 12px; color: #666; }
     #log {
-      margin: 20px;
-      padding: 10px;
-      background-color: #f1f1f1;
-      border: 1px solid #ccc;
-      height: 400px; /* Increased height */
-      overflow-y: scroll;
-      font-family: monospace;
+      margin: 20px; padding: 10px; background-color: #f1f1f1; border: 1px solid #ccc;
+      height: 400px; overflow-y: scroll; font-family: monospace;
     }
-
+    #log p { margin: 0 0 6px; }
   </style>
 </head>
-
 <body>
-  <!--[if IE]>
-    <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
-  <![endif]-->
-
   <h1>Welcome to Jeroen's test site!</h1>
   <a href="/">Navigate</a>
 
-  <!-- Version number to track changes -->
-  <div id="version">Version 1.0.8</div>
-
-  <!-- Log section to display log messages -->
+  <div id="version">Version 1.1.0</div>
   <div id="log"></div>
 
-  <script async src="https://api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b" 
-    onload="log('salemove_integration.js loaded'); initializeSalemove();"></script>
+  <script async
+    src="https://api.beta.salemove.com/salemove_integration.js?site_id=4db6b3c1-cb7f-408d-9d8f-ef5d03c0f44b"
+    onload="log('salemove_integration.js loaded'); initializeSalemove();">
+  </script>
 
   <script>
-    // Log messages to the log section
-    function log(message) {
+    // Simple logger
+    function log(message, data) {
       var logDiv = document.getElementById('log');
-      var newMessage = document.createElement('p');
-      newMessage.textContent = new Date().toISOString() + ': ' + message;
-      logDiv.appendChild(newMessage);
+      var p = document.createElement('p');
+      var suffix = data !== undefined ? ' ' + safeJson(data) : '';
+      p.textContent = new Date().toISOString() + ': ' + message + suffix;
+      logDiv.appendChild(p);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    function safeJson(v) {
+      try { return typeof v === 'string' ? v : JSON.stringify(v); }
+      catch (e) { return String(v); }
     }
 
-    // Initialize Salemove API and set visitor ID attributes
+    // Pretty-print all queues
+    function dumpQueues(glia, tag) {
+      glia.getQueues().then(function(queues) {
+        if (!queues || !queues.length) {
+          log(tag + ' queues: none');
+          return;
+        }
+        queues.forEach(function(q) {
+          var summary = {
+            id: q.id,
+            name: q.name,
+            state: q.state || null   // often includes { status: "open"|"closed"|"full", ... }
+          };
+          log(tag + ' queue', summary);
+        });
+      }).catch(function(err) {
+        log('getQueues() failed:', err && err.message ? err.message : err);
+      });
+    }
+
+    // Attach queue listeners
+    function attachQueueListeners(glia) {
+      // Initial snapshot
+      dumpQueues(glia, 'Initial');
+
+      // Subscribe to state updates
+      glia.addEventListener(glia.EVENTS.QUEUE_STATE_UPDATE, function () {
+        log('QUEUE_STATE_UPDATE received — refreshing queues…');
+        dumpQueues(glia, 'Update');
+      });
+    }
+
+    // Init Glia + set a sample custom attribute
     function initializeSalemove() {
       if (typeof sm !== 'undefined' && typeof sm.getApi === 'function') {
         sm.getApi({ version: 'v1' }).then(function(glia) {
           log('Salemove API initialized.');
 
-          // Update visitor information with custom attributes
+          // subscribe to queue updates
+          attachQueueListeners(glia);
+
+          // example: set a custom attribute
           glia.updateInformation({
             customAttributesUpdateMethod: 'merge',
-            customAttributes: {
-              vip: 'true'
-            }
+            customAttributes: { vip: 'true' }
           }).then(function() {
-            log('Visitor information updated with custom attributes.');
+            log('Visitor info updated (customAttributes.vip=true).');
           }).catch(function(error) {
             if (error.cause === glia.ERRORS.NETWORK_TIMEOUT) {
-              log('Error: Network timeout while updating visitor information.');
+              log('Error: Network timeout while updating visitor info.');
             } else {
-              log('Error updating visitor information: ' + error.message);
+              log('Error updating visitor info: ' + error.message);
             }
           });
 
@@ -95,12 +107,9 @@
       }
     }
 
-    // Check for events after script has loaded
     window.addEventListener('DOMContentLoaded', function() {
       log('Page fully loaded and DOM is ready.');
     });
-
   </script>
 </body>
-
 </html>
